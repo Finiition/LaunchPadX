@@ -1,4 +1,4 @@
-package org.example;
+package org.example.test;
 
 import javax.sound.midi.MidiDevice;
 import javax.sound.midi.MidiSystem;

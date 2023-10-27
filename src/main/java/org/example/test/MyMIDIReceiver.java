@@ -1,4 +1,4 @@
-package org.example;
+package org.example.test;
 
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
@@ -11,7 +11,6 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 
 public class MyMIDIReceiver implements Receiver {
     private Clip audioClip;

@@ -1,4 +1,4 @@
-package org.example;
+package org.example.test;
 
 import org.rjung.util.launchpad.Launchpad;
 

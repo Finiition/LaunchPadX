@@ -1,24 +1,28 @@
 package org.example.test2;
 
-import org.example.Pad;
+import org.example.test.MyMIDIReceiver;
+import org.example.test.Pad;
+import org.example.test2.receiver.MyReceiver;
 
-import javax.sound.midi.MidiSystem;
-import javax.sound.midi.MidiDevice;
-import javax.sound.midi.Receiver;
-import javax.sound.midi.SysexMessage;
-import javax.sound.midi.MidiUnavailableException;
-import javax.sound.midi.InvalidMidiDataException;
-import java.math.BigInteger;
+import javax.sound.midi.*;
 
 public class SimpleTestConnectionLaunchpad {
     public static void main(String[] args) {
         try {
             // Ouvrez le dispositif MIDI de sortie
-            MidiDevice device = MidiSystem.getMidiDevice(MidiSystem.getMidiDeviceInfo()[5]); // Remplacez par le dispositif approprié
+            MidiDevice deviceOutPut = MidiSystem.getMidiDevice(MidiSystem.getMidiDeviceInfo()[5]); // Remplacez par le dispositif approprié
+            deviceOutPut.open();
 
-            // Ouvrez le dispositif MIDI
-            device.open();
-            Receiver receiver = device.getReceiver();
+            // Ouvrez le dispositif MIDI d'entrée
+            MidiDevice deviceInPut = MidiSystem.getMidiDevice(MidiSystem.getMidiDeviceInfo()[7]);
+            deviceInPut.open();
+
+            // Receiver
+            Receiver receiverOutPut = deviceOutPut.getReceiver();
+
+            Receiver receiverInput = new MyReceiver(); // Remplacez MyMIDIReceiver par votre propre implémentation du récepteur MIDI
+            deviceInPut.getTransmitter().setReceiver(receiverInput);
+
 
             // Créez un message SysEx
             byte[] programmerMode = { (byte) 0xF0, 0x00, 0x20, 0x29, 0x02, 0x0C, 0x00, 0x7F, (byte) 0xF7 };
@@ -35,16 +39,6 @@ public class SimpleTestConnectionLaunchpad {
                     (byte) 0xF7   // Fin du message SysEx
             };
 
-            // 2D
-
-            // 0x3D,0x3E,0x3F  0x40,0x41  0x42,    ,0x44
-            //      0x34       0x36,0x37  0x38,0x39,0x3A
-            // 0x29,0x2a       0x2c,0x2D  0x2E,    ,0x30
-
-            byte[] listeNotes = {(byte) 0x3D, 0x3E, 0x34, 0x29, 0x2a,
-                    0x40, 0x41, 0x36, 0x37, 0x2c, 0x2D,
-                    0x42, 0x44, 0x38, 0x39, 0x3A, 0x2E, 0x30};
-
             int status = 144; // Statut de la note-on
             int note = 11;    // Numéro de note
             int color = 9; // Vélocité
@@ -53,7 +47,7 @@ public class SimpleTestConnectionLaunchpad {
             // Developper mode
             SysexMessage sysexMessageDev = new SysexMessage();
             sysexMessageDev.setMessage(programmerMode, programmerMode.length);
-            receiver.send(sysexMessageDev, -1);
+            receiverOutPut.send(sysexMessageDev, -1);
 
             /*SysexMessage sysexMessageDev2 = new SysexMessage();
             sysexMessageDev2.setMessage(sysexMessage, sysexMessage.length);
@@ -67,12 +61,12 @@ public class SimpleTestConnectionLaunchpad {
 
             // Envois le text de son choix
             String debut = "F0h 00h 20h 29h 02h 0Ch 07h 01h 07h 00h 05h ";
-            String textAConvertir = changeTextToHex("Jin");
+            String textAConvertir = changeTextToHex("1 2 3 4 5 6 7 8 9 10");
             String fin = " F7h";
             byte[] bigMessage = convertHexToByte(debut + textAConvertir + fin);
             SysexMessage bigMessageTest = new SysexMessage();
             bigMessageTest.setMessage(bigMessage, bigMessage.length);
-            receiver.send(bigMessageTest, -1);
+            receiverOutPut.send(bigMessageTest, -1);
 
             /*Pad one = new Pad(144, 11,5);
             sendMessage(receiver, one);*/
@@ -89,7 +83,7 @@ public class SimpleTestConnectionLaunchpad {
 
 
             // Fermez le dispositif MIDI
-            device.close();
+            deviceOutPut.close();
         } catch (MidiUnavailableException | InvalidMidiDataException e) {
             e.printStackTrace();
         }

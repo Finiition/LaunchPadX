@@ -1,4 +1,4 @@
-package org.example;
+package org.example.test;
 
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.advanced.AdvancedPlayer;
