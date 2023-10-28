@@ -51,10 +51,19 @@ public class MyReceiver implements Receiver {
 
 
                     try {
-                        byte[] test1234 = utils.convertHexToByte("F0h 00h 20h 29h 02h 0Ch 07h 01h 07h 00h 25h 48h 65h 6Ch 6Ch 6Fh 20h 57h 6Fh 72h 6Ch 64h F7h");
+                        /*byte[] test1234 = utils.convertHexToByte("F0h 00h 20h 29h 02h 0Ch 07h 01h 07h 00h 25h 48h 65h 6Ch 6Ch 6Fh 20h 57h 6Fh 72h 6Ch 64h F7h");
                         SysexMessage testHexTobyte = new SysexMessage();
                         testHexTobyte.setMessage(test1234, test1234.length);
-                        receiverOutput1.send(testHexTobyte, 1000);
+                        receiverOutput1.send(testHexTobyte, 1000);*/
+
+                        // Envois le text de son choix
+                        String debut = "F0h 00h 20h 29h 02h 0Ch 07h 01h 07h 00h 05h ";
+                        String textAConvertir = utils.changeTextToHex(String.valueOf(data1-10));
+                        String fin = " F7h";
+                        byte[] bigMessage = utils.convertHexToByte(debut + textAConvertir + fin);
+                        SysexMessage bigMessageTest = new SysexMessage();
+                        bigMessageTest.setMessage(bigMessage, bigMessage.length);
+                        receiverOutput1.send(bigMessageTest, -1);
 
                         /*SysexMessage sysexMessage2 = new SysexMessage();
                         sysexMessage2.setMessage(sysexData, sysexData.length);
