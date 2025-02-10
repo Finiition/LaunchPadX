@@ -1,5 +1,8 @@
 package org.example.test2.utils;
 
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.SysexMessage;
+
 public class Utils {
     public byte[] createSysExMessage(int status, int note, int color) {
         byte[] sysexMessage = {
@@ -55,14 +58,4 @@ public class Utils {
         }
         return hexString.append("h").toString();
     }
-
-    /*public void triggerColorChange(int position){
-        byte[] message = createSysExMessage()
-    }*/
-
-    /*public void sendMessage(byte[] message) throws InvalidMidiDataException {
-        SysexMessage bigMessageTest = new SysexMessage();
-        bigMessageTest.setMessage(message, message.length);
-        receiverUtils.send(bigMessageTest, -1);
-    }*/
 }

@@ -21,7 +21,6 @@ public class DeviceLaunchPadX {
         deviceInPut.open();
 
         // Programme --> Launchpad
-
         receiverOutPut = deviceOutPut.getReceiver();
 
         // Launchpad --> Programme
