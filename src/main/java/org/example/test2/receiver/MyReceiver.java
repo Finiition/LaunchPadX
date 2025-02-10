@@ -34,24 +34,28 @@ public class MyReceiver implements Receiver {
                 pressKeyChangeColor(command, channel, data1, data2, utils);
             }
 
-            switch (command) {
-                case 144:
-                    pressKeyChangeColor(command, channel, data1, data2, utils);
-                    break;
-                case 176:
-                    resetAllColor(command, channel, data1, data2, utils);
-                    System.out.println("RESET");
-                    break;
-                default:
-                    System.out.println("AUTRE NOTE");
+            switch (data1) {
+                case 89 -> resetAllColor(command, channel, data1, data2, utils);
+                case 91 -> selectColour(command, channel, data1, data2, utils);
+                default -> {
+                    if(data1 < 88){
+                        pressKeyChangeColor(command, channel, data1, data2, utils);
+                    }else{
+                        System.out.println("AUTRE NOTE + " + data1);
+                    }
+                }
             }
-
-
-            //pressKeyToNumber(command, channel, data1, data2, utils);
         }
-
     }
 
+    /**
+     * Appuyer sur une touche affiche son numéro
+     * @param command
+     * @param channel
+     * @param data1
+     * @param data2
+     * @param utils
+     */
     private void pressKeyToNumber(int command, int channel, int data1, int data2, Utils utils) {
         // 144 - NOTE_ON
         // 160 - POLY_PRESSURE
@@ -77,13 +81,21 @@ public class MyReceiver implements Receiver {
         }
     }
 
+    /**
+     * Appuyer sur une touche l'allume
+      * @param command
+     * @param channel
+     * @param data1
+     * @param data2
+     * @param utils
+     */
     private void pressKeyChangeColor(int command, int channel, int data1, int data2, Utils utils){
         if (command == ShortMessage.NOTE_ON && channel == 0) {
             if (data2 != 0) {
                 try {
                     // Envois le text de son choix
                     String numberNote = intToHex(data1);
-                    String debut = "F0h 00h 20h 29h 02h 0Ch 03h 00h " + numberNote + " 00h F7h";
+                    String debut = "F0h 00h 20h 29h 02h 0Ch 03h 00h " + numberNote + " 0Ch F7h";
                     byte[] bigMessage = utils.convertHexToByte(debut);
                     SysexMessage bigMessageTest = new SysexMessage();
                     bigMessageTest.setMessage(bigMessage, bigMessage.length);
@@ -113,6 +125,31 @@ public class MyReceiver implements Receiver {
                     String notes = "";
                     for (NumberNote note : NumberNote.values()) {
                         notes += " 00h " + note.toString() + " 00h";
+                    }
+                    String fin = " F7h";
+                    String total = debut + notes + fin;
+                    System.out.println(total);
+                    byte[] bigMessage = utils.convertHexToByte(debut + notes + fin);
+                    SysexMessage bigMessageTest = new SysexMessage();
+                    bigMessageTest.setMessage(bigMessage, bigMessage.length);
+                    receiverOutput1.send(bigMessageTest, -1);
+                } catch (InvalidMidiDataException e) {
+                    throw new RuntimeException(e);
+                }
+
+                System.out.println("Note " + data1 + " ON");
+            }
+        }
+    }
+
+    private void selectColour(int command, int channel, int data1, int data2, Utils utils){
+        if (command == 176 && channel == 0) {
+            if (data2 != 0) {
+                try {
+                    String debut = "F0h 00h 20h 29h 02h 0Ch 03h";
+                    String notes = "";
+                    for (NumberNote note : NumberNote.values()) {
+                        notes += " 00h " + note.toString() + " " + note.toString();
                     }
                     String fin = " F7h";
                     String total = debut + notes + fin;
