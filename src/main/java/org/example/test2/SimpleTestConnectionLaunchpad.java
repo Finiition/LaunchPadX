@@ -1,8 +1,5 @@
 package org.example.test2;
 
-import org.example.test.Pad;
-import org.example.test2.utils.Utils;
-
 import javax.sound.midi.*;
 
 public class SimpleTestConnectionLaunchpad {
