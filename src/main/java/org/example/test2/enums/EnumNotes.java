@@ -1,5 +1,10 @@
 package org.example.test2.enums;
 
+import org.example.test2.objects.Note;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public enum EnumNotes {
     // Première ligne : 0Bh à 12h
     NOTE1("0Bh", "0h"),
@@ -83,6 +88,7 @@ public enum EnumNotes {
 
     private final String number;
     private final String color;
+    List<EnumNotes> listEnumNotes = new ArrayList<>();
 
     // Constructeur de l'enum
     EnumNotes(String number, String color) {
@@ -102,6 +108,6 @@ public enum EnumNotes {
 
     @Override
     public String toString() {
-        return number + " -> [" + color + "]";
+        return "00h " + number + " " + color + " ";
     }
 }

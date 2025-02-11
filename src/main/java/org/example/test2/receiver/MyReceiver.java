@@ -12,16 +12,23 @@ import java.util.Objects;
 public class MyReceiver implements Receiver {
     private Receiver receiverOutput1;
     private String colourChoosen = "0Ch";
+    private Transmitter transmitterInput;
     private int layout = 0;
     List<Note> listNotes = new ArrayList<>();
     Utils utils = new Utils();
 
-    public MyReceiver() {
-        try {
-            receiverOutput1 = MidiSystem.getMidiDevice(MidiSystem.getMidiDeviceInfo()[5]).getReceiver();// Ouverture d'un Receiver
-        } catch (MidiUnavailableException e) {
-            e.printStackTrace();
+    public MyReceiver(Transmitter transmitterInput, Receiver receiverOutput1, String colourChoosen, int layout) throws MidiUnavailableException {
+        this.transmitterInput = transmitterInput;
+        this.receiverOutput1 = receiverOutput1;
+        this.colourChoosen = colourChoosen;
+        this.layout = layout;
+
+        for (EnumNotes note : EnumNotes.values()) {
+            listNotes.add(new Note("00h", note.getNumber(), "00h"));
         }
+
+        // Connecter le transmitter au receiver pour recevoir les données MIDI
+        this.transmitterInput.setReceiver(this);
     }
 
     @Override
@@ -32,7 +39,8 @@ public class MyReceiver implements Receiver {
             int data1 = shortMessage.getData1();
             int data2 = shortMessage.getData2();
 
-            System.out.println("Command " + command);
+            System.out.println("Command : " + command);
+            System.out.println("NOTE : " + data1);
 
             if(command == 144){
                 pressKeyChangeColor(command, channel, data1, data2);
@@ -44,14 +52,20 @@ public class MyReceiver implements Receiver {
                 default -> {
                     if(data1 < 88){
                         pressKeyChangeColor(command, channel, data1, data2);
-                    }else{
-                        System.out.println("AUTRE NOTE + " + data1);
                     }
                 }
             }
         }
     }
 
+    /**
+     * Change la note pressée par la couleur choisie
+     *
+     * @param command The MIDI command type. This should be equal to ShortMessage.NOTE_ON to trigger note-related actions.
+     * @param channel The MIDI channel. Specific actions are triggered only for channel 0.
+     * @param data1   The note number associated with the MIDI message. This value is used to determine the target note.
+     * @param data2   The velocity of the note. A non-zero value indicates the note is "ON".
+     */
     private void pressKeyChangeColor(int command, int channel, int data1, int data2){
         if (command == ShortMessage.NOTE_ON && channel == 0 && layout == 0 && data2 != 0) {
             try {
@@ -72,11 +86,20 @@ public class MyReceiver implements Receiver {
             for (Note note : listNotes) {
                 if(Objects.equals(note.getNumber(), intToHex(data1))){
                     colourChoosen = note.getVelocity();
+                    layout = 0;
                 }
             }
         }
     }
 
+    /**
+     * Supprime toutes les couleurs de la grid principale
+     *
+     * @param command The MIDI command, used to determine if reset logic should be applied.
+     * @param channel The MIDI channel, specifically acting when channel 0 is provided.
+     * @param data1   The first data byte of the MIDI message; unused in this method.
+     * @param data2   The second data byte of the MIDI message, where a non-zero value can trigger specific behavior.
+     */
     private void reset(int command, int channel, int data1, int data2){
         layout = 0;
         if (command == 176 && channel == 0) {
@@ -102,21 +125,25 @@ public class MyReceiver implements Receiver {
         }
     }
 
+    /**
+     * Affiche toutes les couleurs afin de les selectionnées pour le layout 0
+     *
+     * @param command The MIDI command. The method processes only when the command equals 176.
+     * @param channel The MIDI channel. The method is activated only for channel 0.
+     * @param data1   The first data byte of the MIDI message; unused in this method.
+     * @param data2   The second data byte of the MIDI message. A non-zero value triggers the colour configuration logic.
+     */
     private void selectColour(int command, int channel, int data1, int data2){
         layout = 1;
         if (command == 176 && channel == 0) {
             if (data2 != 0) {
                 try {
-                    String debut = "F0h 00h 20h 29h 02h 0Ch 03h";
-                    String notes = "";
+                    StringBuilder stringBuilder = new StringBuilder("F0h 00h 20h 29h 02h 0Ch 03h ");
                     for (EnumNotes note : EnumNotes.values()) {
-                        notes += " 00h " + note.getNumber() + " " + note.getColor();
-                        listNotes.add(new Note("00h", note.getNumber(), note.getColor()));
+                        stringBuilder.append(note.toString());
                     }
-                    String fin = " F7h";
-                    String total = debut + notes + fin;
-                    System.out.println(total);
-                    byte[] bigMessage = utils.convertHexToByte(debut + notes + fin);
+                    stringBuilder.append("F7h");
+                    byte[] bigMessage = utils.convertHexToByte(stringBuilder.toString());
                     SysexMessage bigMessageTest = new SysexMessage();
                     bigMessageTest.setMessage(bigMessage, bigMessage.length);
                     receiverOutput1.send(bigMessageTest, -1);
@@ -164,5 +191,12 @@ public class MyReceiver implements Receiver {
 
     @Override
     public void close() {
+        // Fermer le receiver et le transmitter si nécessaire
+        if (transmitterInput != null) {
+            transmitterInput.close();
+        }
+        if (receiverOutput1 != null) {
+            receiverOutput1.close();
+        }
     }
 }
