@@ -1,8 +1,5 @@
 package org.example.test2.utils;
 
-import javax.sound.midi.InvalidMidiDataException;
-import javax.sound.midi.SysexMessage;
-
 public class Utils {
     public byte[] createSysExMessage(int status, int note, int color) {
         byte[] sysexMessage = {
