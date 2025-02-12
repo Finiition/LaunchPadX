@@ -41,10 +41,6 @@ public class Note {
     // Méthode toString
     @Override
     public String toString() {
-        return "Note{" +
-                "channel='" + channel + '\'' +
-                ", number='" + number + '\'' +
-                ", velocity='" + velocity + '\'' +
-                '}';
+        return " 00h " + number + " " + velocity;
     }
 }
