@@ -3,32 +3,35 @@ package org.example.test2.receiver;
 import javazoom.jl.decoder.JavaLayerException;
 import javazoom.jl.player.Player;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import org.example.test2.enums.EnumNotes;
 import org.example.test2.objects.Note;
 import org.example.test2.utils.Utils;
 
 import javax.sound.midi.*;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
 
 public class MyReceiver implements Receiver {
     private Receiver receiverOutput1;
     private String colourChoosen = "0Ch";
     private Transmitter transmitterInput;
     private int layout = 1;
-    List<Note> listNotesDraw = new ArrayList<>();
-    List<Note> listNotesColour = new ArrayList<>();
+    List<Note> layout0 = new ArrayList<>();
+    List<Note> layout1 = new ArrayList<>();
     Utils utils = new Utils();
     long timeStamp = 0;
     int lastNote = 0;
     int countNoteFail = 0;
+    Player player = null;
+    Robot robot = new Robot();
 
-    public MyReceiver(Transmitter transmitterInput, Receiver receiverOutput1, String colourChoosen, int layout) throws MidiUnavailableException {
+    public MyReceiver(Transmitter transmitterInput, Receiver receiverOutput1, String colourChoosen, int layout) throws MidiUnavailableException, AWTException {
         this.transmitterInput = transmitterInput;
         this.receiverOutput1 = receiverOutput1;
         this.colourChoosen = colourChoosen;
@@ -38,8 +41,8 @@ public class MyReceiver implements Receiver {
         // Draw = layout 1 dessin
         // Colour = layout 0 selection couleur
         for (EnumNotes note : EnumNotes.values()) {
-            listNotesDraw.add(new Note("00h", note.getNumber(), "00h"));
-            listNotesColour.add(new Note("00h", note.getNumber(), note.getColor()));
+            layout1.add(new Note("00h", note.getNumber(), "00h"));
+            layout0.add(new Note("00h", note.getNumber(), note.getColor()));
         }
 
         // Connecter le transmitter au receiver pour recevoir les données MIDI
@@ -53,9 +56,8 @@ public class MyReceiver implements Receiver {
             int channel = shortMessage.getChannel();
             int data1 = shortMessage.getData1();
             int data2 = shortMessage.getData2();
-            
-            System.out.println(command + " " + channel + " " + data1 + " " + data2);
-            if((timeStamp  > (this.timeStamp +1000)) && (timeStamp != this.timeStamp) && (this.countNoteFail == 0) ){
+
+            if((timeStamp  > (this.timeStamp + 100000)) && (timeStamp != this.timeStamp) && (this.countNoteFail == 0) ){
                 this.timeStamp = timeStamp;
                 this.lastNote = data1;
                 //System.out.println("TOUCHE " + data1 + " timeStamp " + timeStamp );
@@ -73,40 +75,92 @@ public class MyReceiver implements Receiver {
                         if((data1 < 88) && (layout == 0) ){
                             pressKeyChangeColor(command, channel, data1, data2);
                         }else if((data1 < 88) && (layout == 2)){
-                            playMusique();
+                            playMusique(command, channel, data1, data2);
                         }
                     }
                 }
             }
         }
     }
-    private void afficheLayout2(int command, int channel, int data1, int data2){
+    private void afficheLayout2(int command, int channel, int data1, int data2) {
         layout = 2;
+        StringBuilder stringBuilder = new StringBuilder("F0h 00h 20h 29h 02h 0Ch 03h");
+        stringBuilder.append(" 00h 0Bh 3Ch");
+        stringBuilder.append(" 00h 0Ch 3Ch");
+        stringBuilder.append(" 00h 0Dh 3Ch");
+        stringBuilder.append(" 00h 0Eh 3Ch");
+        stringBuilder.append(" 00h 0Fh 3Ch");
+        stringBuilder.append(" 00h 10h 3Ch");
+        stringBuilder.append(" 00h 11h 3Ch");
+        stringBuilder.append(" 00h 12h 3Ch");
+        stringBuilder.append(" F7h");
+
+        byte[] bigMessage = utils.convertHexToByte(stringBuilder.toString());
+        SysexMessage bigMessageTest = new SysexMessage();
+        try {
+            bigMessageTest.setMessage(bigMessage, bigMessage.length);
+        } catch (InvalidMidiDataException e) {
+            throw new RuntimeException(e);
+        }
+        receiverOutput1.send(bigMessageTest, -1);
     }
 
-    private void playMusique(){
-        String filePath = "/vine-boom.mp3"; // Remplacez par le nom de votre fichier
+    private void playMusique(int command, int channel, int data1, int data2){
+        String filePath = "";
 
-        /*try (InputStream inputStream = MyReceiver.class.getResourceAsStream(filePath2)) {
-            if (inputStream == null) {
-                System.out.println("Fichier 2 non trouvé : " + filePath2);
-                return;
+        if(player != null){
+            player.close();
+        }
+
+        switch (data1) {
+            case 11 -> {
+                robot.keyPress(KeyEvent.VK_F13);
+                robot.keyRelease(KeyEvent.VK_F13);
             }
-            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+            case 12 -> {
+                robot.keyPress(KeyEvent.VK_F14);
+                robot.keyRelease(KeyEvent.VK_F14);
             }
-        } catch (IOException e) {
-            System.out.println("Erreur lors de la lecture du fichier : " + e.getMessage());
-        }*/
+            case 13 -> {
+                robot.keyPress(KeyEvent.VK_F15);
+                robot.keyRelease(KeyEvent.VK_F15);
+            }
+            case 14 -> {
+                robot.keyPress(KeyEvent.VK_F16);
+                robot.keyRelease(KeyEvent.VK_F16);
+            }
+            case 15 -> {
+                robot.keyPress(KeyEvent.VK_F17);
+                robot.keyRelease(KeyEvent.VK_F17);
+            }
+            case 16 -> {
+                robot.keyPress(KeyEvent.VK_F18);
+                robot.keyRelease(KeyEvent.VK_F18);
+            }
+            case 17 -> {
+                robot.keyPress(KeyEvent.VK_F19);
+                robot.keyRelease(KeyEvent.VK_F19);
+            }
+            case 18 -> {
+                robot.keyPress(KeyEvent.VK_F20);
+                robot.keyRelease(KeyEvent.VK_F20);
+            }
+            /*case 19 -> {
+                robot.keyPress(KeyEvent.VK_F21);
+                robot.keyRelease(KeyEvent.VK_F21);
+            }
+            case 20 -> {
+                robot.keyPress(KeyEvent.VK_F22);
+                robot.keyRelease(KeyEvent.VK_F22);
+            }*/
+        }
 
         try (InputStream inputStream = MyReceiver.class.getResourceAsStream(filePath)) {
             if (inputStream == null) {
                 System.out.println("Fichier non trouvé : " + filePath);
                 return;
             }
-            Player player = new Player(inputStream);
+            player = new Player(inputStream);
             System.out.println("Lecture de la musique...");
             player.play();
         } catch (JavaLayerException e) {
@@ -123,7 +177,7 @@ public class MyReceiver implements Receiver {
             try {
                 // Envois le text de son choix
                 StringBuilder stringBuilder = new StringBuilder("F0h 00h 20h 29h 02h 0Ch 03h");
-                for (Note note : listNotesDraw) {
+                for (Note note : layout1) {
                     stringBuilder.append(note.toString());
                 }
                 stringBuilder.append(" F7h");
@@ -152,7 +206,7 @@ public class MyReceiver implements Receiver {
                 //System.out.println("pressKeyChangeColor layout : " + layout );
                 StringBuilder stringBuilder = new StringBuilder("F0h 00h 20h 29h 02h 0Ch 03h");
                 String intToHex = intToHex(data1);
-                for (Note note : listNotesDraw) {
+                for (Note note : layout1) {
                     if (Objects.equals(note.getNumber(), intToHex)) {
                         note.setVelocity(colourChoosen);
                         stringBuilder.append(note);
@@ -168,7 +222,7 @@ public class MyReceiver implements Receiver {
             }
         } else if (command == ShortMessage.NOTE_ON && channel == 0 && layout == 0 && data2 != 0) {
             //System.out.println("pressKeyChangeColor layout : " + layout );
-            for (Note note : listNotesColour) {
+            for (Note note : layout0) {
                 if(Objects.equals(note.getNumber(), intToHex(data1))){
                     colourChoosen = note.getVelocity();
                     countNoteFail = 1;
@@ -195,7 +249,7 @@ public class MyReceiver implements Receiver {
                 try {
                     String debut = "F0h 00h 20h 29h 02h 0Ch 03h";
                     String notes = "";
-                    for (Note note : listNotesDraw) {
+                    for (Note note : layout1) {
                         notes += " 00h " + note.getNumber() + " 00h";
                         note.setVelocity("00h");
                     }
@@ -227,7 +281,7 @@ public class MyReceiver implements Receiver {
             if (data2 != 0) {
                 try {
                     StringBuilder stringBuilder = new StringBuilder("F0h 00h 20h 29h 02h 0Ch 03h");
-                    for (Note note : listNotesColour) {
+                    for (Note note : layout0) {
                         stringBuilder.append(note.toString());
                     }
                     stringBuilder.append(" F7h");

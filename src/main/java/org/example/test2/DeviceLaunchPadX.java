@@ -4,6 +4,7 @@ import org.example.test2.receiver.MyReceiver;
 import org.example.test2.utils.Utils;
 
 import javax.sound.midi.*;
+import java.awt.*;
 
 public class DeviceLaunchPadX {
     Receiver receiverOutPut;
@@ -13,7 +14,7 @@ public class DeviceLaunchPadX {
      * Lancement de l'application et initialisation des receiver
      * @throws MidiUnavailableException
      */
-    public void runApp() throws MidiUnavailableException {
+    public void runApp() throws MidiUnavailableException, AWTException {
 
         // Récupère les infos sur les appareils MIDI disponibles
         MidiDevice.Info[] infos = MidiSystem.getMidiDeviceInfo();
