@@ -73,7 +73,7 @@ public class DeviceLaunchPadX {
         receiverOutPut.send(sysexMessageDev, -1);
 
         // Ajout des couleurs sur les touches principales
-        String debut = "F0h 00h 20h 29h 02h 0Ch 03h 00h 59h 05h 00h 5Bh 15h 00h 5Ch 15h F7h";
+        String debut = "F0h 00h 20h 29h 02h 0Ch 03h 00h 59h 05h 00h 5Bh 15h 00h 5Ch 15h 00h 5Dh 15h F7h";
         byte[] bigMessage = utils.convertHexToByte(debut);
         SysexMessage bigMessageTest = new SysexMessage();
         bigMessageTest.setMessage(bigMessage, bigMessage.length);

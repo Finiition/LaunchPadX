@@ -1,10 +1,17 @@
 package org.example.test2.receiver;
 
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.Player;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
 import org.example.test2.enums.EnumNotes;
 import org.example.test2.objects.Note;
 import org.example.test2.utils.Utils;
 
 import javax.sound.midi.*;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -61,13 +68,51 @@ public class MyReceiver implements Receiver {
                     case 89 -> reset(command, channel, data1, data2);
                     case 91 -> afficheLayout0(command, channel, data1, data2);
                     case 92 -> afficheLayout1(command, channel, data1, data2);
+                    case 93 -> afficheLayout2(command, channel, data1, data2);
                     default -> {
                         if((data1 < 88) && (layout == 0) ){
                             pressKeyChangeColor(command, channel, data1, data2);
+                        }else if((data1 < 88) && (layout == 2)){
+                            playMusique();
                         }
                     }
                 }
             }
+        }
+    }
+    private void afficheLayout2(int command, int channel, int data1, int data2){
+        layout = 2;
+    }
+
+    private void playMusique(){
+        String filePath = "/vine-boom.mp3"; // Remplacez par le nom de votre fichier
+
+        /*try (InputStream inputStream = MyReceiver.class.getResourceAsStream(filePath2)) {
+            if (inputStream == null) {
+                System.out.println("Fichier 2 non trouvé : " + filePath2);
+                return;
+            }
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Erreur lors de la lecture du fichier : " + e.getMessage());
+        }*/
+
+        try (InputStream inputStream = MyReceiver.class.getResourceAsStream(filePath)) {
+            if (inputStream == null) {
+                System.out.println("Fichier non trouvé : " + filePath);
+                return;
+            }
+            Player player = new Player(inputStream);
+            System.out.println("Lecture de la musique...");
+            player.play();
+        } catch (JavaLayerException e) {
+            System.out.println("Erreur lors de la lecture du fichier MP3 : " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("Une erreur s'est produite : " + e.getMessage());
         }
     }
 
