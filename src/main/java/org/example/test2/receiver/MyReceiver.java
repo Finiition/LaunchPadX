@@ -19,6 +19,7 @@ public class MyReceiver implements Receiver {
     Utils utils = new Utils();
     long timeStamp = 0;
     int lastNote = 0;
+    int countNoteFail = 0;
 
     public MyReceiver(Transmitter transmitterInput, Receiver receiverOutput1, String colourChoosen, int layout) throws MidiUnavailableException {
         this.transmitterInput = transmitterInput;
@@ -45,11 +46,12 @@ public class MyReceiver implements Receiver {
             int channel = shortMessage.getChannel();
             int data1 = shortMessage.getData1();
             int data2 = shortMessage.getData2();
-
-            if((timeStamp + 10000 > this.timeStamp) && (timeStamp != this.timeStamp) ){
+            
+            System.out.println(command + " " + channel + " " + data1 + " " + data2);
+            if((timeStamp  > (this.timeStamp +1000)) && (timeStamp != this.timeStamp) && (this.countNoteFail == 0) ){
                 this.timeStamp = timeStamp;
                 this.lastNote = data1;
-                System.out.println("TOUCHE " + data1 + " timeStamp " + timeStamp );
+                //System.out.println("TOUCHE " + data1 + " timeStamp " + timeStamp );
 
                 if(command == 144){
                     pressKeyChangeColor(command, channel, data1, data2);
@@ -60,24 +62,7 @@ public class MyReceiver implements Receiver {
                     case 91 -> afficheLayout0(command, channel, data1, data2);
                     case 92 -> afficheLayout1(command, channel, data1, data2);
                     default -> {
-                        if(data1 < 88){
-                            pressKeyChangeColor(command, channel, data1, data2);
-                        }
-                    }
-                }
-
-                System.out.println("TOUCHE " + data1 );
-
-                if(command == 144){
-                    pressKeyChangeColor(command, channel, data1, data2);
-                }
-
-                switch (data1) {
-                    case 89 -> reset(command, channel, data1, data2);
-                    case 91 -> afficheLayout0(command, channel, data1, data2);
-                    case 92 -> afficheLayout1(command, channel, data1, data2);
-                    default -> {
-                        if(data1 < 88){
+                        if((data1 < 88) && (layout == 0) ){
                             pressKeyChangeColor(command, channel, data1, data2);
                         }
                     }
@@ -88,7 +73,7 @@ public class MyReceiver implements Receiver {
 
     private void afficheLayout1(int command, int channel, int data1, int data2){
         layout = 1;
-        System.out.println("Layout 1");
+        //System.out.println("Layout 1");
         if (channel == 0 && data2 != 0) {
             try {
                 // Envois le text de son choix
@@ -117,28 +102,33 @@ public class MyReceiver implements Receiver {
      */
     private void pressKeyChangeColor(int command, int channel, int data1, int data2)  {
         if (command == ShortMessage.NOTE_ON && channel == 0 && layout == 1 && data2 != 0) {
-            StringBuilder stringBuilder = new StringBuilder("F0h 00h 20h 29h 02h 0Ch 03h");
-            String intToHex = intToHex(data1);
-            for (Note note : listNotesDraw) {
-                if(Objects.equals(note.getNumber(), intToHex)){
-                    note.setVelocity(colourChoosen);
-                    stringBuilder.append(note);
-                }
-            }
-            stringBuilder.append(" F7h");
-            byte[] bigMessage = utils.convertHexToByte(stringBuilder.toString());
-            SysexMessage bigMessageTest = new SysexMessage();
+            SysexMessage bigMessageTest = null;
             try {
+                //System.out.println("pressKeyChangeColor layout : " + layout );
+                StringBuilder stringBuilder = new StringBuilder("F0h 00h 20h 29h 02h 0Ch 03h");
+                String intToHex = intToHex(data1);
+                for (Note note : listNotesDraw) {
+                    if (Objects.equals(note.getNumber(), intToHex)) {
+                        note.setVelocity(colourChoosen);
+                        stringBuilder.append(note);
+                    }
+                }
+                stringBuilder.append(" F7h");
+                byte[] bigMessage = utils.convertHexToByte(stringBuilder.toString());
+                bigMessageTest = new SysexMessage();
                 bigMessageTest.setMessage(bigMessage, bigMessage.length);
+                receiverOutput1.send(bigMessageTest, -1);
             } catch (InvalidMidiDataException e) {
                 throw new RuntimeException(e);
             }
-            receiverOutput1.send(bigMessageTest, -1);
         } else if (command == ShortMessage.NOTE_ON && channel == 0 && layout == 0 && data2 != 0) {
+            //System.out.println("pressKeyChangeColor layout : " + layout );
             for (Note note : listNotesColour) {
                 if(Objects.equals(note.getNumber(), intToHex(data1))){
                     colourChoosen = note.getVelocity();
+                    countNoteFail = 1;
                     afficheLayout1(command, channel, data1, data2);
+                    countNoteFail = 0;
                 }
             }
         }
@@ -154,7 +144,7 @@ public class MyReceiver implements Receiver {
      */
     private void reset(int command, int channel, int data1, int data2){
         layout = 1;
-        System.out.println("Layout 1");
+        //System.out.println("Layout 1");
         if (command == 176 && channel == 0) {
             if (data2 != 0) {
                 try {
@@ -187,7 +177,7 @@ public class MyReceiver implements Receiver {
      */
     private void afficheLayout0(int command, int channel, int data1, int data2){
         layout = 0;
-        System.out.println("Layout 0");
+        //System.out.println("Layout 0");
         if (command == 176 && channel == 0) {
             if (data2 != 0) {
                 try {
@@ -240,7 +230,7 @@ public class MyReceiver implements Receiver {
                     throw new RuntimeException(e);
                 }
 
-                System.out.println("Note " + data1 + " ON");
+                //System.out.println("Note " + data1 + " ON");
             }
         }
     }
